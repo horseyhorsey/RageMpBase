@@ -42,7 +42,7 @@ This resource will build to RAGEMP's server runtime directory.
 
 - If you're not using the default **C:/RAGEMP/** edit the csproj
 - Logs to **RAGEMP\server-files\Logs**
-- Highly Recommend to remove the **server-logs.txt** produced by GTAN (I choose one main script to delete this file each time it's run)
+- Highly Recommend to remove the **server-logs.txt** produced by GTAN (I choose one main script to delete this file each time it's run if logging from console)
 -  When this **server-logs.txt** gets above 800K the server load up time is significantly slower to boot up.
 - Logging methods are overridable
 

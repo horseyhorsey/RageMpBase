@@ -14,17 +14,35 @@ namespace RageMpBase
         #region Fields
         static ILogger _logger;
         bool _loggerEnabled = false;
+
+        /// <summary>
+        /// Holds the name to this loaded resource
+        /// </summary>
+        public string ResourceName { get; }
         #endregion
 
         #region Constructors
         public RageScript()
         {
+            ResourceName = this.GetType().Name;
+
             //Add logging if script attribute has LoggerAttribute
             AddLogger();
         }
         #endregion
 
         #region Virtual
+
+        /// <summary>
+        /// Gets all the commands used by this resource
+        /// </summary>
+        protected virtual string[] GetResourceCommands(Client client)
+        {
+            var name = this.GetType().Name;
+            client.SendChatMessage("Commands", $"{name} Commands:");
+            return NAPI.Resource.GetResourceCommands(name);
+        }
+
         /// <summary>
         /// Returns all available settings names from this resources meta.xml
         /// </summary>
@@ -39,14 +57,15 @@ namespace RageMpBase
         /// Logs with Serilog to file if this script is using <see cref="LoggerAttribute"/>. Also prints to console
         /// </summary>
         /// <param name="message">Can be template "My message {variableName}"</param>
-        /// <param name="rageScriptLogLevel"></param>
+        /// <param name="loglvl"></param>
+        /// <param name="console">Log to console?</param>
         /// <param name="args"></param>
-        public virtual void Log(string message, RageLogLevel rageScriptLogLevel = RageLogLevel.Debug, params object[] args)
+        protected virtual void Log(string message, bool console = true, RageLogLevel loglvl = RageLogLevel.Debug, params object[] args)
         {
             if (!_loggerEnabled) return;
 
             message = this.GetType().Name + ":" + message;            
-            switch (rageScriptLogLevel)
+            switch (loglvl)
             {
                 case RageLogLevel.Verbose:
                     _logger.Verbose(message, args);
@@ -68,7 +87,10 @@ namespace RageMpBase
                     break;
                 default:
                     break;
-            }            
+            }
+
+            if (console)
+                NAPI.Util.ConsoleOutput(message);
         }
 
         /// <summary>
@@ -76,7 +98,7 @@ namespace RageMpBase
         /// </summary>
         /// <param name="exception"></param>
         /// <param name="msgTemplate"></param>
-        public virtual void LogEx(Exception exception, string msgTemplate)
+        protected virtual void LogEx(Exception exception, string msgTemplate)
         {
             if (_loggerEnabled)
                 _logger.Error(exception, msgTemplate);            
@@ -88,7 +110,7 @@ namespace RageMpBase
         /// <param name="exception"></param>
         /// <param name="msgTemplate"></param>
         /// <param name="console"></param>
-        public virtual void LogEx(Exception exception, string msgTemplate, bool console = true)
+        protected virtual void LogEx(Exception exception, string msgTemplate, bool console = true)
         {
             if (_loggerEnabled)
             {
@@ -97,14 +119,6 @@ namespace RageMpBase
                 if (console)
                     NAPI.Util.ConsoleOutput(msgTemplate + " " + exception?.Message);
             }                
-        }
-
-        public virtual void LogIncludeConsole(string message, bool logConsole = true, RageLogLevel rageScriptLogLevel = RageLogLevel.Debug, params object[] args)
-        {
-            if (logConsole)
-                NAPI.Util.ConsoleOutput(message);
-
-            Log(message, rageScriptLogLevel, args);
         }
 
         #endregion
@@ -139,7 +153,7 @@ namespace RageMpBase
                 .CreateLogger();
             }
 
-            Log($"starting logger: {this.GetType().Name}", RageLogLevel.Information);
+            Log($"starting logger: {ResourceName}", loglvl: RageLogLevel.Information);
         }
         #endregion
     }
